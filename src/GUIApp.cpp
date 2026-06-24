@@ -351,7 +351,8 @@ void GUIApp::drawResultsPanel()
 
         // Thumbnail ảnh
         cv::Rect thumbRect = {x, y, THUMB_SIZE, THUMB_SIZE};
-        cv::Mat img = cv::imread(m_results[i].imagePath);
+        std::string fullPath = getBasePath() + m_results[i].imagePath;
+        cv::Mat img = cv::imread(fullPath);
         if (!img.empty()) {
             drawThumbnail(img, thumbRect);
         } else {
