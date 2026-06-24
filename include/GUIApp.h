@@ -60,7 +60,7 @@ public:
     static constexpr int LEFT_W     = 280;  ///< Chiều rộng panel trái
     static constexpr int STATUS_H   = 40;   ///< Chiều cao thanh trạng thái
     static constexpr int TITLE_H    = 50;   ///< Chiều cao tiêu đề
-    static constexpr int THUMB_SIZE = 160;  ///< Kích thước ảnh kết quả (pixel)
+    static constexpr int THUMB_SIZE = 110;  ///< Kích thước ảnh kết quả (pixel)
     static constexpr int THUMB_GAP  = 12;   ///< Khoảng cách giữa ảnh kết quả
 
     /**

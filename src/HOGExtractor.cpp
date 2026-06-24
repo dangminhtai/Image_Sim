@@ -1,7 +1,23 @@
+/**
+ * @file HOGExtractor.cpp
+ * @brief Cài đặt đặc trưng Histogram of Oriented Gradients (HOG).
+ *
+ * Tiền xử lý ảnh (chuyển Grayscale, Gaussian Blur, Equalize Histogram),
+ * thay đổi kích thước ảnh về m_targetSize, sau đó sử dụng cv::HOGDescriptor
+ * để trích xuất đặc trưng và chuẩn hóa L2 vector kết quả.
+ */
+
 #include "HOGExtractor.h"
 #include <opencv2/imgproc.hpp>
 #include <vector>
 
+// ──────────────────────────────────────────────
+// Constructor
+// ──────────────────────────────────────────────
+
+/**
+ * @brief Khởi tạo cấu hình HOG Descriptor.
+ */
 HOGExtractor::HOGExtractor(cv::Size targetSize) : m_targetSize(targetSize) {
     // Sử dụng cấu hình mặc định nhưng kích thước winSize phải khớp targetSize
     // winSize, blockSize, blockStride, cellSize, nbins
@@ -14,6 +30,13 @@ HOGExtractor::HOGExtractor(cv::Size targetSize) : m_targetSize(targetSize) {
     );
 }
 
+// ──────────────────────────────────────────────
+// extract()
+// ──────────────────────────────────────────────
+
+/**
+ * @brief Rút trích và chuẩn hóa đặc trưng HOG.
+ */
 cv::Mat HOGExtractor::extract(const cv::Mat& image) const {
     if (image.empty()) return cv::Mat();
 

@@ -116,7 +116,7 @@ int main() {
         return 1;
     }
     
-    std::string testDir = base + "data/TestImages";
+    std::string testDir = base + "data/CD/TestImages";
     std::vector<std::string> testImages;
     for (const auto& entry : fs::directory_iterator(testDir)) {
         if (entry.is_regular_file()) {
@@ -134,7 +134,7 @@ int main() {
     std::vector<std::string> methods = {
         "ColorHistogram", "ColorCorrelogram", "SIFT", "ORB", "HOG", "LBP", "Color_HOG"
     };
-    std::vector<int> Ks = {3, 5, 11, 15};
+    std::vector<int> Ks = {3, 5, 11, 21};
     
     std::ofstream out("docs/evaluation_results.md");
     out << "# Báo cáo Đánh giá MAP (Mean Average Precision)\n\n";

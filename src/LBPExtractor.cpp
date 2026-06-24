@@ -1,6 +1,22 @@
+/**
+ * @file LBPExtractor.cpp
+ * @brief Cài đặt thuật toán rút trích đặc trưng Local Binary Pattern (LBP).
+ *
+ * Tiền xử lý: chuyển ảnh màu sang Grayscale và Gaussian Blur.
+ * Tính toán mã LBP 8-bit cho từng pixel dựa trên 8 pixel lân cận.
+ * Tính toán histogram tần suất của các mã LBP (256 bins) và chuẩn hóa L2.
+ */
+
 #include "LBPExtractor.h"
 #include <opencv2/imgproc.hpp>
 
+// ──────────────────────────────────────────────
+// extract()
+// ──────────────────────────────────────────────
+
+/**
+ * @brief Rút trích và chuẩn hóa đặc trưng LBP Histogram.
+ */
 cv::Mat LBPExtractor::extract(const cv::Mat& image) const {
     if (image.empty()) return cv::Mat();
 

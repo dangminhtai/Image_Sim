@@ -1,11 +1,34 @@
+/**
+ * @file FusionExtractor.cpp
+ * @brief Cài đặt bộ trích xuất lai (Fusion Extractor).
+ *
+ * Thực hiện rút trích đặc trưng từ hai extractor con riêng biệt,
+ * sau đó ghép nối (concatenate) lại thành một vector duy nhất
+ * và chuẩn hóa L2 để cân bằng tỷ trọng của hai loại đặc trưng.
+ */
+
 #include "FusionExtractor.h"
 #include <opencv2/core.hpp>
 
+// ──────────────────────────────────────────────
+// Constructor
+// ──────────────────────────────────────────────
+
+/**
+ * @brief Khởi tạo FusionExtractor với 2 extractor con.
+ */
 FusionExtractor::FusionExtractor(std::shared_ptr<FeatureExtractor> ext1, 
                                  std::shared_ptr<FeatureExtractor> ext2, 
                                  const std::string& name)
     : m_ext1(ext1), m_ext2(ext2), m_name(name) {}
 
+// ──────────────────────────────────────────────
+// extract()
+// ──────────────────────────────────────────────
+
+/**
+ * @brief Rút trích và ghép nối 2 vector đặc trưng.
+ */
 cv::Mat FusionExtractor::extract(const cv::Mat& image) const {
     if (!m_ext1 || !m_ext2) return cv::Mat();
 
