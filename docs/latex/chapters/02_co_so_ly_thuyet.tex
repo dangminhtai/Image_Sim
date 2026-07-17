@@ -1,0 +1,139 @@
+\chapter{Cơ sở Lý thuyết}
+
+\section{Hệ thống truy vấn ảnh dựa vào nội dung}
+Một hệ thống CBIR (Content-Based Image Retrieval) gồm hai giai đoạn chính:
+
+\subsection{Giai đoạn xây dựng cơ sở dữ liệu đặc trưng}
+\begin{enumerate}
+    \item Đọc từng ảnh trong tập cơ sở dữ liệu.
+    \item Tiền xử lý ảnh (thay đổi kích thước, chuyển đổi không gian màu).
+    \item Trích xuất vector đặc trưng từ nội dung ảnh.
+    \item Lưu vector đặc trưng cùng đường dẫn hoặc nhãn ảnh vào file định dạng (như YAML) để tiết kiệm thời gian trích xuất lần sau.
+\end{enumerate}
+
+\subsection{Giai đoạn truy vấn}
+\begin{enumerate}
+    \item Người dùng chọn một ảnh đầu vào (ảnh truy vấn).
+    \item Hệ thống trích xuất đặc trưng của ảnh truy vấn bằng đúng phương pháp đã chọn.
+    \item Tính độ khác biệt (Distance) hoặc độ tương đồng (Similarity) giữa vector của ảnh truy vấn và các vector trong cơ sở dữ liệu.
+    \item Sắp xếp danh sách theo thứ tự khoảng cách tăng dần (hoặc tương đồng giảm dần).
+    \item Trả về \textbf{Top-K} ảnh giống nhất.
+\end{enumerate}
+
+\missingfigure{system_pipeline.png}{Quy trình tổng quát của hệ thống CBIR.}
+
+\section{Color Histogram}
+Color Histogram (Biểu đồ màu) đo lường sự phân bố màu sắc trong ảnh. Phương pháp này bỏ qua thông tin không gian (vị trí) của pixel, giúp hệ thống bất biến với các phép quay và tịnh tiến, nhưng có thể bị sai lệch nếu hai ảnh có hình ảnh khác nhau nhưng mang cùng phổ màu \cite{datta2008image}.
+
+Công thức histogram chuẩn hóa:
+\begin{equation}
+\hat{h}_i = \frac{h_i}{\sum_{j=1}^{B} h_j}
+\end{equation}
+Trong đó:
+\begin{itemize}
+    \item $h_i$: số pixel thuộc bin thứ $i$.
+    \item $B$: tổng số bin được lượng tử hóa.
+    \item $\hat{h}_i$: giá trị histogram sau chuẩn hóa.
+\end{itemize}
+Trong bài toán này, đặc trưng Histogram được rút trích trên không gian màu HSV với cấu hình 32 bins cho mỗi kênh H, S, V.
+
+\section{Color Correlogram}
+Color Correlogram mở rộng từ Color Histogram bằng cách xem xét mối tương quan về không gian của các pixel màu \cite{huang1997image}. Phương pháp này đếm số lượng các cặp pixel cùng màu nằm cách nhau một khoảng cách $d$.
+Ưu điểm của Color Correlogram so với Color Histogram là nó chứa đựng thông tin về phân bố không gian và kết cấu màu sắc, từ đó giúp nâng cao độ chính xác khi tìm kiếm.
+Trong ứng dụng, cấu hình số mức lượng tử hóa là 8 màu và khoảng cách không gian được thiết lập là $d \in \{1, 3, 5, 7\}$.
+
+\section{SIFT (Scale-Invariant Feature Transform)}
+SIFT là phương pháp biểu diễn đặc trưng cục bộ (Local Features) mạnh mẽ, bất biến với tỷ lệ, phép quay và độ chiếu sáng \cite{lowe2004distinctive}. Quá trình trích xuất gồm:
+\begin{enumerate}
+    \item \textbf{Phát hiện Keypoint:} Sử dụng cực trị của không gian Gaussian (Difference of Gaussians).
+    \item \textbf{Mô tả đặc trưng (Descriptor):} Tại mỗi keypoint, trích xuất vector hướng gradient với số chiều là 128.
+\end{enumerate}
+Để chuyển tập hợp các descriptor thành một vector đặc trưng duy nhất đại diện cho toàn bộ ảnh, hệ thống áp dụng kỹ thuật \textbf{Bag of Visual Words (BoVW)}. Tập hợp các descriptor của cơ sở dữ liệu sẽ được phân cụm K-Means thành $V$ từ vựng ($V=500$). Mỗi ảnh sau đó được biểu diễn dưới dạng histogram của các "từ vựng" này.
+
+\section{ORB (Oriented FAST and Rotated BRIEF)}
+ORB là một phương pháp thay thế hiệu quả về chi phí tính toán cho SIFT \cite{rublee2011orb}. 
+\begin{enumerate}
+    \item \textbf{Phát hiện keypoint:} Sử dụng FAST (Features from Accelerated Segment Test) mở rộng thêm cơ sở hướng (Orientation).
+    \item \textbf{Mô tả đặc trưng:} Sử dụng thuật toán BRIEF có định hướng, sinh ra descriptor nhị phân.
+\end{enumerate}
+Tương tự như SIFT, thuật toán ORB trong dự án này cũng kết hợp với mô hình Bag of Visual Words (500 từ) để biểu diễn ảnh.
+
+\section{HOG (Histogram of Oriented Gradients)}
+HOG trích xuất thông tin về hình dáng biên cạnh thông qua tần suất xuất hiện của hướng gradient trong các vùng cục bộ của ảnh \cite{dalal2005histograms}.
+\begin{enumerate}
+    \item Ảnh được chia thành các Cell (ví dụ $8 \times 8$ pixel).
+    \item Tại mỗi Cell, lập biểu đồ phân bố hướng gradient (9 bins).
+    \item Gom nhóm các Cell thành Block ($16 \times 16$ pixel) để chuẩn hóa L2, giảm thiểu sự ảnh hưởng của độ sáng.
+\end{enumerate}
+Trong hệ thống, ảnh được thay đổi kích thước về $64 \times 64$ trước khi rút trích đặc trưng HOG.
+
+\section{LBP (Local Binary Patterns)}
+LBP trích xuất đặc trưng kết cấu (Texture) bằng cách so sánh mức xám của pixel trung tâm với các pixel xung quanh \cite{ojala2002multiresolution}.
+
+Công thức hàm LBP:
+\begin{equation}
+LBP_{P,R} = \sum_{p=0}^{P-1} s(g_p - g_c) 2^p
+\end{equation}
+Với:
+\begin{equation}
+s(x) =
+\begin{cases}
+1, & x \geq 0\\
+0, & x < 0
+\end{cases}
+\end{equation}
+Kết quả là một mã LBP 8-bit cho mỗi pixel. Sau đó, xây dựng histogram tần suất xuất hiện của các mã LBP (256 bins) và chuẩn hóa bằng L2 norm.
+
+\section{Kết hợp đặc trưng (Color + HOG)}
+Nhằm kết hợp ưu điểm của đặc trưng màu sắc (Color) và đặc trưng hình dạng/biên cạnh (HOG), dự án thực hiện phương pháp Early Fusion để nối hai vector đặc trưng.
+\begin{equation}
+f_{\text{fusion}} = [\alpha f_{\text{color}},\ \beta f_{\text{HOG}}]
+\end{equation}
+Vector sau khi nối được chuẩn hóa L2 một lần nữa để cân bằng tỷ trọng của cả hai nhóm đặc trưng.
+
+\section{Các độ đo so sánh}
+Trong hệ thống, ba loại khoảng cách được cài đặt để đo độ tương đồng. Khoảng cách càng nhỏ thì hai ảnh càng giống nhau.
+
+\subsection{Khoảng cách Euclidean (L2)}
+\begin{equation}
+d(\mathbf{x},\mathbf{y}) = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}
+\end{equation}
+
+\subsection{Cosine Distance}
+Tính toán từ độ tương đồng Cosine:
+\begin{equation}
+\operatorname{cos}(\mathbf{x},\mathbf{y}) = \frac{\mathbf{x} \cdot \mathbf{y}}{\|\mathbf{x}\|_2 \|\mathbf{y}\|_2}
+\end{equation}
+Khoảng cách Cosine:
+\begin{equation}
+d_{\text{cosine}} = 1 - \operatorname{cos}(\mathbf{x},\mathbf{y})
+\end{equation}
+
+\subsection{Chi-Squared Distance}
+Thường được dùng rất hiệu quả cho các dữ liệu kiểu phân bố tần suất (Histogram):
+\begin{equation}
+d_{\chi^2}(\mathbf{x},\mathbf{y}) = \frac{1}{2} \sum_{i=1}^{n} \frac{(x_i - y_i)^2}{x_i + y_i + \varepsilon}
+\end{equation}
+Trong đó $\varepsilon$ là hệ số rất nhỏ để tránh lỗi chia cho 0.
+
+\section{Đánh giá Average Precision và Mean Average Precision}
+Với danh sách kết quả Top-K, Precision tại vị trí $k$:
+\begin{equation}
+P(k) = \frac{\text{số ảnh liên quan trong } k \text{ kết quả đầu}}{k}
+\end{equation}
+
+Average Precision (AP) tại Top-K:
+\begin{equation}
+AP@K = \frac{1}{\min(R, K)} \sum_{k=1}^{K} P(k) \cdot rel(k)
+\end{equation}
+Trong đó:
+\begin{itemize}
+    \item $rel(k) = 1$ nếu ảnh tại vị trí $k$ liên quan đến ảnh truy vấn, ngược lại bằng 0.
+    \item $R$: tổng số ảnh liên quan tồn tại trong cơ sở dữ liệu.
+\end{itemize}
+
+Mean Average Precision (MAP) được tính trên toàn bộ tập ảnh truy vấn $Q$:
+\begin{equation}
+MAP@K = \frac{1}{|Q|} \sum_{q \in Q} AP_q@K
+\end{equation}
+Trong đó $Q$ là tập hợp tất cả các ảnh truy vấn được dùng để đánh giá \cite{manning2008introduction}.

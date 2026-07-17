@@ -1,0 +1,55 @@
+\chapter{Kiểm thử chương trình}
+
+\section{Danh sách ca kiểm thử}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|c|l|X|X|c|}
+\hline
+\textbf{Mã} & \textbf{Trường hợp kiểm thử} & \textbf{Kết quả mong đợi} & \textbf{Kết quả thực tế} & \textbf{Trạng thái} \\
+\hline
+TC01 & Chọn ảnh hợp lệ & Hiển thị ảnh lên giao diện bên trái & Ảnh hiển thị đầy đủ, không méo & Đạt \\
+\hline
+TC02 & Truy vấn Top-3 & Trả đúng 3 ảnh bên lưới & Trả về 3 ảnh kèm điểm số & Đạt \\
+\hline
+TC03 & Truy vấn Top-21 & Trả tối đa 21 ảnh bên lưới & Trả về 21 ảnh đúng thứ hạng & Đạt \\
+\hline
+TC04 & Đổi phương pháp & Kết quả được cập nhật lại & Thời gian và danh sách ảnh đổi & Đạt \\
+\hline
+TC05 & Ảnh hỏng & Không làm chương trình bị dừng & In dòng cảnh báo và bỏ qua ảnh & Đạt \\
+\hline
+TC06 & CSDL nhỏ hơn K & Trả số ảnh hiện có & Chỉ xuất \texttt{min(K, database\_size)} & Đạt \\
+\hline
+TC07 & Chạy script \texttt{evaluate\_map} & Sinh ra bảng Markdown MAP & Đã kết xuất ra thư mục docs & Đạt \\
+\hline
+\end{tabularx}
+\caption{Bảng các ca kiểm thử tính năng của chương trình.}
+\end{table}
+
+\section{Kiểm tra công thức AP/MAP}
+Bên trong mã nguồn \texttt{evaluate\_map.cpp}, chúng ta tính mảng Precision và Average Precision như sau:
+\begin{minted}[
+    fontsize=\small,
+    breaklines=true,
+    linenos=true,
+    frame=single,
+    tabsize=4
+]{cpp}
+float computeAP(const std::vector<SearchResult>& results, const std::string& queryLabel, int K, int totalRelevant = 3) {
+    int hits = 0;
+    float sumPrecisions = 0.0f;
+    
+    int limit = std::min(K, static_cast<int>(results.size()));
+    for (int i = 0; i < limit; ++i) {
+        if (results[i].label == queryLabel) {
+            hits++;
+            sumPrecisions += static_cast<float>(hits) / (i + 1);
+        }
+    }
+    
+    if (hits == 0) return 0.0f;
+    return sumPrecisions / std::min(totalRelevant, limit);
+}
+\end{minted}
+Ví dụ với danh sách liên quan trong Top-5 là \texttt{[1, 0, 1, 0, 1]}, $totalRelevant=3$.
+$P(1) = 1$, $P(3) = 2/3$, $P(5) = 3/5$.
+$AP@5 = (1 + 2/3 + 3/5) / \min(3, 5) = 2.266 / 3 \approx 0.755$. Kết quả thực tế chạy tay khớp 100\% với thuật toán.

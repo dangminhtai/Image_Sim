@@ -117,7 +117,7 @@ void GUIApp::initButtons()
 
     // ── Nhóm K ────────────────────────────────
     m_kBtns.clear();
-    std::vector<int> kValues = {3, 5, 11, 15};
+    std::vector<int> kValues = {3, 5, 11, 21};
     int kw = (bw - 12) / 4;
     for (int i = 0; i < 4; i++) {
         std::string label = "K=" + std::to_string(kValues[i]);

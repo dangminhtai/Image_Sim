@@ -25,6 +25,11 @@
 
 /**
  * @brief Nạp CSDL đặc trưng từ file YAML.
+ *
+ * Sau khi nạp xong, tự động build 3 loại index:
+ *  1. FLANN KD-Tree (cho HOG, Color_HOG)
+ *  2. Forward Index (cho Chi-Squared brute-force)
+ *  3. Inverted Index (cho SIFT, ORB BoW)
  */
 bool ImageSearchEngine::loadDatabase(const std::string& featuresFile)
 {
@@ -45,6 +50,9 @@ bool ImageSearchEngine::loadDatabase(const std::string& featuresFile)
 
     // Xây dựng FLANN indices để tìm kiếm nhanh
     buildFlannIndices();
+
+    // Xây dựng Forward Index và Inverted Index
+    buildSearchIndices();
     
     return true;
 }
@@ -173,11 +181,37 @@ std::vector<SearchResult> ImageSearchEngine::search(const cv::Mat& queryImage,
         return results;
     }
 
-    // Bước 3: So sánh với toàn bộ CSDL
+    // Bước 3: So sánh với toàn bộ CSDL — chọn index phù hợp
     const auto& db = m_db.getDatabase();
     results.reserve(db.size());
 
-    if ((metric == DistanceMetric::EUCLIDEAN || metric == DistanceMetric::COSINE) &&
+    // === Nhánh 1: Inverted Index cho SIFT/ORB BoW ===
+    // TF-IDF scoring qua posting lists (sparse lookup)
+    if (m_invertedIndices.find(method) != m_invertedIndices.end() &&
+        m_invertedIndices.at(method).isBuilt()) {
+
+        auto& invIdx = m_invertedIndices.at(method);
+        auto invResults = invIdx.search(queryFeat, static_cast<int>(db.size()));
+
+        // Chuyển đổi kết quả Inverted Index sang SearchResult
+        // Inverted Index trả về score cao = tương đồng hơn,
+        // ta đổi dấu thành (maxScore - score) để đồng nhất "nhỏ hơn = giống hơn"
+        float maxScore = 0.0f;
+        if (!invResults.empty()) {
+            maxScore = invResults.front().second;  // Đã sort giảm dần
+        }
+        for (const auto& [imgID, score] : invResults) {
+            if (imgID >= 0 && imgID < static_cast<int>(db.size())) {
+                results.push_back({
+                    db[imgID].imagePath,
+                    db[imgID].label,
+                    maxScore - score  // Đổi dấu: nhỏ hơn = giống hơn
+                });
+            }
+        }
+    }
+    // === Nhánh 2: FLANN KD-Tree cho Euclidean/Cosine (HOG, Color_HOG) ===
+    else if ((metric == DistanceMetric::EUCLIDEAN || metric == DistanceMetric::COSINE) &&
         m_flannIndices.find(method) != m_flannIndices.end()) {
         
         // --- TÌM KIẾM NHANH VỚI FLANN (O(log N)) ---
@@ -185,13 +219,6 @@ std::vector<SearchResult> ImageSearchEngine::search(const cv::Mat& queryImage,
         cv::Mat queryF32;
         queryFeat.convertTo(queryF32, CV_32F);
 
-        // Do ta cần trả về K kết quả NHƯNG sau này ta có sắp xếp lại toàn bộ,
-        // để mô phỏng đúng hệt code cũ (tính khoảng cách với toàn bộ),
-        // ta có thể cho FLANN trả về số lượng K_search = N hoặc giới hạn lại.
-        // Tuy nhiên hàm search() yêu cầu giữ nguyên luồng logic lấy top K.
-        // Tối ưu nhất là nhờ FLANN tìm k_neighbors = toàn bộ (do db nhỏ = 99)
-        // hoặc chí ít là K kết quả gần nhất. Nhưng vì kiến trúc cũ push toàn bộ
-        // rồi mới sort. Ta cứ lấy toàn bộ N kết quả từ FLANN cho an toàn.
         int searchK = static_cast<int>(db.size());
         
         cv::Mat indices(1, searchK, CV_32S);
@@ -216,14 +243,26 @@ std::vector<SearchResult> ImageSearchEngine::search(const cv::Mat& queryImage,
             }
             results.push_back({db[idx].imagePath, db[idx].label, finalScore});
         }
-    } else {
-        // --- TÌM KIẾM TUYẾN TÍNH O(N) (Dành cho Chi-Sq) ---
-        for (const auto& record : db) {
-            auto it = record.features.find(method);
-            if (it == record.features.end()) continue;
-
-            float score = computeDistance(queryFeat, it->second, metric);
-            results.push_back({record.imagePath, record.label, score});
+    }
+    // === Nhánh 3: Forward Index + brute-force (Chi-Squared, fallback) ===
+    else {
+        // Sử dụng ForwardIndex để tra cứu O(1) thay vì duyệt map trong record
+        if (m_forwardIndex.isBuilt()) {
+            for (int imgID = 0; imgID < static_cast<int>(db.size()); ++imgID) {
+                const cv::Mat& dbFeat = m_forwardIndex.getFeature(imgID, method);
+                if (dbFeat.empty()) continue;
+                float score = computeDistance(queryFeat, dbFeat, metric);
+                const auto& meta = m_forwardIndex.getMetadata(imgID);
+                results.push_back({meta.imagePath, meta.label, score});
+            }
+        } else {
+            // Fallback: duyệt trực tiếp vector<ImageRecord> (tương thích ngược)
+            for (const auto& record : db) {
+                auto it = record.features.find(method);
+                if (it == record.features.end()) continue;
+                float score = computeDistance(queryFeat, it->second, metric);
+                results.push_back({record.imagePath, record.label, score});
+            }
         }
     }
 
@@ -303,4 +342,48 @@ void ImageSearchEngine::buildFlannIndices()
             featuresMat, cv::flann::KDTreeIndexParams(4));
     }
     std::cout << "[SearchEngine] FLANN (KD-Tree) indices da duoc build thanh cong.\n";
+}
+
+// ──────────────────────────────────────────────
+// Forward Index & Inverted Index
+// ──────────────────────────────────────────────
+
+/**
+ * @brief Xây dựng Forward Index và Inverted Index.
+ *
+ * Forward Index: build từ tất cả ImageRecord, dùng cho mọi method.
+ * Inverted Index: chỉ build cho SIFT và ORB (BoW methods)
+ * vì chúng có vocabulary rời rạc phù hợp với cấu trúc inverted file.
+ */
+void ImageSearchEngine::buildSearchIndices()
+{
+    const auto& db = m_db.getDatabase();
+    if (db.empty()) return;
+
+    // Build Forward Index
+    m_forwardIndex.build(db);
+
+    // Build Inverted Index cho các phương pháp BoW
+    // Danh sách các method dùng Bag-of-Words histogram
+    static const std::vector<std::string> bowMethods = {"SIFT", "ORB"};
+
+    m_invertedIndices.clear();
+    for (const auto& method : bowMethods) {
+        // Kiểm tra method có tồn tại trong CSDL không
+        bool methodExists = false;
+        for (const auto& m : m_availableMethods) {
+            if (m == method) { methodExists = true; break; }
+        }
+        if (!methodExists) continue;
+
+        InvertedIndex invIdx;
+        invIdx.build(db, method);
+        if (invIdx.isBuilt()) {
+            m_invertedIndices[method] = std::move(invIdx);
+        }
+    }
+
+    std::cout << "[SearchEngine] Forward Index + "
+              << m_invertedIndices.size()
+              << " Inverted Index da duoc build.\n";
 }

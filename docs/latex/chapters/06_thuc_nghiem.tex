@@ -1,0 +1,124 @@
+\chapter{Thực nghiệm và Đánh giá}
+
+\section{Cấu hình thực nghiệm}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Thuộc tính} & \textbf{Giá trị} \\
+\hline
+Tên tập dữ liệu & CD Covers Dataset (TMBuD) \\
+\hline
+Tổng số ảnh trong CSDL & 99 ảnh \\
+\hline
+Số ảnh truy vấn (Test) & 10 ảnh \\
+\hline
+Giá trị K & 3, 5, 11, 21 \\
+\hline
+Phần cứng & CPU Tiêu chuẩn \\
+\hline
+Cách xác định ảnh liên quan & Ảnh có chung tiền tố ID (ví dụ \texttt{001\_x.png}). Ground truth được định nghĩa qua tên file. \\
+\hline
+\end{tabularx}
+\caption{Cấu hình hệ thống thực nghiệm.}
+\end{table}
+
+\section{Bộ tham số của các phương pháp}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|l|}
+\hline
+\textbf{Phương pháp} & \textbf{Tham số chính} & \textbf{Độ đo} \\
+\hline
+Color Histogram & Không gian HSV, 32 bins/kênh & Chi-Squared \\
+\hline
+Color Correlogram & 8 màu lượng tử hóa, 4 khoảng cách & Chi-Squared \\
+\hline
+SIFT & 500 từ vựng (BoVW), Max 500 keypoints & Cosine \\
+\hline
+ORB & 500 từ vựng (BoVW), Max 500 keypoints & Euclidean \\
+\hline
+HOG & $64 \times 64$ resize, block 16, cell 8, 9 bins & Cosine \\
+\hline
+LBP & Bán kính 1, 8 điểm lân cận, 256 bins & Chi-Squared \\
+\hline
+Color + HOG & Nối Vector, chuẩn hóa L2 Norm & Cosine \\
+\hline
+\end{tabularx}
+\caption{Bảng siêu tham số của từng phương pháp.}
+\end{table}
+
+\section{Kết quả MAP (Mean Average Precision)}
+Bảng dưới đây trình bày điểm số đánh giá độ chính xác trung bình (MAP) do module \texttt{evaluate\_map} tự động trích xuất dựa trên 10 ảnh Test.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|c|c|c|c|c|}
+\hline
+\textbf{Phương pháp} & \textbf{Độ đo khoảng cách} & \textbf{MAP@3} & \textbf{MAP@5} & \textbf{MAP@11} & \textbf{MAP@21} \\
+\hline
+Color Histogram & Chi-Squared & 0.033 & 0.057 & \textbf{0.066} & 0.074 \\
+\hline
+Color Correlogram & Chi-Squared & 0.028 & 0.023 & 0.036 & 0.062 \\
+\hline
+SIFT & Cosine & \textbf{0.056} & \textbf{0.056} & \textbf{0.066} & \textbf{0.078} \\
+\hline
+ORB & Euclidean & 0.033 & 0.033 & 0.038 & 0.038 \\
+\hline
+HOG & Cosine & 0.011 & 0.011 & 0.020 & 0.031 \\
+\hline
+LBP & Chi-Squared & 0.033 & 0.048 & 0.059 & 0.067 \\
+\hline
+Color\_HOG & Cosine & 0.028 & 0.043 & 0.046 & 0.054 \\
+\hline
+\end{tabularx}
+\caption{Bảng kết quả MAP trên 10 ảnh Test.}
+\end{table}
+
+\section{Phân tích kết quả MAP}
+Dựa trên số liệu, có thể nhận thấy một vài xu hướng rõ ràng:
+\begin{itemize}
+    \item \textbf{SIFT đạt hiệu năng cao nhất:} Tại mọi ngưỡng K, SIFT liên tục giữ top 1 (với MAP@21 là 0.078). Sức mạnh bất biến của SIFT trước các phép xoay, co giãn, đã giúp trích xuất thành công nội dung của nhãn đĩa CD.
+    \item \textbf{Color Histogram thể hiện bất ngờ:} Trái với nhận định đặc trưng màu là thô sơ, Color Histogram (MAP@21 = 0.074) đứng thứ hai. Điều này đến từ việc các bìa đĩa CD thường mang một dải màu đặc trưng và dễ phân biệt.
+    \item \textbf{HOG hoạt động cực kỳ kém:} Với số điểm MAP@21 chỉ đạt 0.031, chứng tỏ dải phân bố Gradient không đủ để mô tả độ chi tiết trong ảnh bìa CD vốn mang nhiều phông chữ và texture lộn xộn.
+    \item \textbf{LBP ở mức trung bình khá:} Với MAP@21 = 0.067, LBP bắt được kết cấu chữ in tốt hơn nhiều so với HOG.
+    \item \textbf{Sự kết hợp Color\_HOG chưa tạo ra đột biến:} Điểm MAP ở ngưỡng 0.054 cho thấy việc nối vector HOG vào Color đã vô tình làm giảm độ chính xác của Color gốc. Cần áp dụng trọng số $\alpha$ và $\beta$ hợp lý hơn thay vì ghép tỉ lệ 1:1.
+\end{itemize}
+
+\section{Minh họa kết quả thực nghiệm}
+Dưới đây là một số ví dụ minh họa kết quả khi thử nghiệm truy vấn với từng loại đặc trưng trên giao diện ứng dụng thực tế.
+
+\subsection{Color Histogram}
+\missingfigure{color_histogram_01.png}{Kết quả truy vấn Color Histogram – trường hợp 1.}
+\missingfigure{color_histogram_02.png}{Kết quả truy vấn Color Histogram – trường hợp 2.}
+\missingfigure{color_histogram_03.png}{Kết quả truy vấn Color Histogram – trường hợp 3.}
+
+\subsection{Color Correlogram}
+\missingfigure{color_correlogram_01.png}{Kết quả Color Correlogram 1.}
+\missingfigure{color_correlogram_02.png}{Kết quả Color Correlogram 2.}
+\missingfigure{color_correlogram_03.png}{Kết quả Color Correlogram 3.}
+
+\subsection{SIFT}
+\missingfigure{sift_01.png}{Kết quả SIFT 1.}
+\missingfigure{sift_02.png}{Kết quả SIFT 2.}
+\missingfigure{sift_03.png}{Kết quả SIFT 3.}
+
+\subsection{ORB}
+\missingfigure{orb_01.png}{Kết quả ORB 1.}
+\missingfigure{orb_02.png}{Kết quả ORB 2.}
+\missingfigure{orb_03.png}{Kết quả ORB 3.}
+
+\subsection{HOG}
+\missingfigure{hog_01.png}{Kết quả HOG 1.}
+\missingfigure{hog_02.png}{Kết quả HOG 2.}
+\missingfigure{hog_03.png}{Kết quả HOG 3.}
+
+\subsection{LBP}
+\missingfigure{lbp_01.png}{Kết quả LBP 1.}
+\missingfigure{lbp_02.png}{Kết quả LBP 2.}
+\missingfigure{lbp_03.png}{Kết quả LBP 3.}
+
+\subsection{Color + HOG}
+\missingfigure{color_hog_01.png}{Kết quả Color + HOG 1.}
+\missingfigure{color_hog_02.png}{Kết quả Color + HOG 2.}
+\missingfigure{color_hog_03.png}{Kết quả Color + HOG 3.}

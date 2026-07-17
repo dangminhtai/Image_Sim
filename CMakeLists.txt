@@ -37,6 +37,8 @@ set(LIB_SOURCES
     src/HOGExtractor.cpp
     src/LBPExtractor.cpp
     src/FusionExtractor.cpp
+    src/ForwardIndex.cpp
+    src/InvertedIndex.cpp
 )
 
 # ── Thư viện tĩnh chứa các extractor và builder ───────────────────────────────

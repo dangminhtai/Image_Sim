@@ -1,0 +1,24 @@
+\chapter{Hướng dẫn biên dịch}
+
+\begin{minted}[
+    fontsize=\small,
+    breaklines=true,
+    frame=single,
+    tabsize=4
+]{bash}
+# 1. Tạo thư mục build và cấu hình CMake
+cmake -S . -B build
+
+# 2. Biên dịch dự án ở chế độ Release
+cmake --build build --config Release
+
+# 3. Sau khi biên dịch, các file .exe sẽ nằm trong thư mục build/Release/
+# Chạy chương trình rút trích đặc trưng trước:
+./build/Release/build_features.exe
+
+# Chạy giao diện tìm kiếm:
+./build/Release/cbir_gui.exe
+
+# Chạy công cụ đánh giá MAP:
+./build/Release/evaluate_map.exe
+\end{minted}

@@ -139,9 +139,9 @@ int main() {
     std::ofstream out("docs/evaluation_results.md");
     out << "# Báo cáo Đánh giá MAP (Mean Average Precision)\n\n";
     out << "Báo cáo dưới đây được tự động tạo bởi script `evaluate_map`. \n";
-    out << "Độ đo MAP (càng cao càng tốt) được tính bằng cách trung bình Average Precision (AP) của 10 ảnh Test.\n\n";
+    out << "Độ đo MAP (càng cao càng tốt) được tính bằng cách trung bình Average Precision (AP) của " << testImages.size() << " ảnh Test.\n\n";
     
-    out << "| Phương pháp | Độ đo khoảng cách | MAP@3 | MAP@5 | MAP@11 | MAP@15 |\n";
+    out << "| Phương pháp | Độ đo khoảng cách | MAP@3 | MAP@5 | MAP@11 | MAP@21 |\n";
     out << "|---|---|---|---|---|---|\n";
     
     for (const auto& method : methods) {

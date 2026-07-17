@@ -1,0 +1,76 @@
+\documentclass[12pt,a4paper]{report}
+
+\input{config/packages}
+\input{config/commands}
+\input{config/metadata}
+
+\begin{document}
+
+% Trang bìa
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Large \textbf{\MakeUppercase{\schoolname}}}\\[0.5cm]
+    {\large \textbf{\MakeUppercase{\facultyname}}}\\[2cm]
+    
+    {\large Môn học: \coursename}\\[1cm]
+    
+    {\Large \textbf{\MakeUppercase{\reporttitle}}}\\[3cm]
+    
+    \begin{flushleft}
+        \large
+        \textbf{Sinh viên thực hiện:}\\
+        \studentname{} - \studentid{} - Lớp: \classname{}\\[0.5cm]
+        Email: \studentemail{}\\
+        SĐT: \studentphone{}\\[1cm]
+        \textbf{Giảng viên hướng dẫn:}\\
+        \advisorname{}
+    \end{flushleft}
+    
+    \vfill
+    
+    {\large \cityname, \reportyear}
+    
+\end{titlepage}
+
+\clearpage
+\pagenumbering{roman}
+
+
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+
+\pagenumbering{arabic}
+
+% Các chương nội dung
+\input{chapters/01_gioi_thieu}
+\input{chapters/02_co_so_ly_thuyet}
+\input{chapters/03_phan_tich_thiet_ke}
+\input{chapters/04_cai_dat}
+\input{chapters/05_huong_dan_su_dung}
+\input{chapters/06_thuc_nghiem}
+\input{chapters/07_muc_do_hoan_thanh}
+\input{chapters/08_kiem_thu}
+\input{chapters/09_han_che_phat_trien}
+
+
+% Tài liệu tham khảo
+\clearpage
+\addcontentsline{toc}{chapter}{Tài liệu tham khảo}
+\bibliographystyle{ieeetr}
+\bibliography{bibliography/references}
+
+% Phụ lục
+\appendix
+\input{appendices/appendix_build}
+\input{appendices/appendix_parameters}
+\input{appendices/appendix_sources}
+
+\end{document}

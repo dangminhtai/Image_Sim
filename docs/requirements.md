@@ -66,3 +66,16 @@ Nén file dạng .RAR hoặc .ZIP với tên `<MSSV1>_<MSSV2>_DOAN.rar/.zip` bao
   - `Source/`: Mã nguồn (đã xóa các file tạm, file ẩn, file .sdf, thư mục Demo).
   - `Release/`: Chứa file `*.exe`, `*.dll` (chỉ các file cần thiết, nếu OpenCV > 3.0 thì không cần dll).
   - `Docs/`: Chứa file báo cáo và hướng dẫn.
+
+## REQ001 - Cải tiến cấu trúc dữ liệu tìm kiếm bằng Forward Index và Inverted Index
+
+Mô tả:
+- Thiết kế và cài đặt cấu trúc dữ liệu Forward Index (ánh xạ imageID -> features) hỗ trợ truy xuất nhanh đặc trưng của ảnh trong thời gian O(1) qua bảng băm thay vì duyệt tuyến tính.
+- Thiết kế và cài đặt cấu trúc dữ liệu Inverted Index (visual word -> posting list) kết hợp tính trọng số TF-IDF cho hai đặc trưng dạng túi từ vựng (Bag of Words) là SIFT và ORB.
+- Tích hợp các chỉ mục trên vào engine truy vấn `ImageSearchEngine`, tự động kích hoạt chỉ mục tương ứng tùy theo phương pháp trích xuất được người dùng chọn.
+
+Tiêu chí hoàn thành:
+- Tích hợp thành công hai lớp `ForwardIndex` và `InvertedIndex` vào hệ thống mà không phá vỡ logic giao diện hay trích xuất đặc trưng hiện tại.
+- Biên dịch chương trình thành công ở chế độ Release.
+- Chạy chương trình đánh giá MAP tự động `evaluate_map.exe` ổn định, ghi nhận giá trị MAP và lưu kết quả vào `docs/evaluation_results.md`.
+

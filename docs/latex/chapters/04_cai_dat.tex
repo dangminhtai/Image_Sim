@@ -1,0 +1,88 @@
+\chapter{Cài đặt hệ thống}
+
+\section{Môi trường phát triển}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{Thành phần} & \textbf{Phiên bản} \\
+\hline
+Hệ điều hành & Windows \\
+\hline
+Trình biên dịch & MSVC (Microsoft Visual Studio Compiler) / GCC \\
+\hline
+Hệ thống Build & CMake (version 3.20 trở lên) \\
+\hline
+Thư viện xử lý ảnh & OpenCV 4.x \\
+\hline
+Ngôn ngữ lập trình & C++17 \\
+\hline
+\end{tabularx}
+\caption{Môi trường và công cụ phát triển dự án.}
+\end{table}
+
+\section{Tiền xử lý dữ liệu}
+Trong chương trình, các ảnh đầu vào đều trải qua một số bước tiền xử lý cố định thông qua module \texttt{retrieval\_utils}:
+\begin{itemize}
+    \item \textbf{Đọc ảnh:} Ảnh được đọc trực tiếp qua hàm \texttt{cv::imread}. Nếu file hỏng, bỏ qua.
+    \item \textbf{Đồng bộ kích thước:} Hầu hết ảnh được resize về $256 \times 256$ để giảm nhiễu cục bộ và tăng tốc tìm kiếm. Riêng thuật toán HOG được resize cố định về $64 \times 64$ để phù hợp với chuẩn rút trích.
+    \item \textbf{Khử nhiễu:} Áp dụng Gaussian Blur với Kernel kích thước $5 \times 5$.
+    \item \textbf{Chuyển không gian màu:} Tùy phương pháp, ảnh sẽ được đổi qua RGB (cho SIFT, ORB), HSV (cho Color Histogram) hoặc Grayscale (cho LBP, HOG).
+\end{itemize}
+
+\section{Quy trình truy vấn Top-K thực tế}
+Dưới đây là luồng xử lý do \texttt{ImageSearchEngine::search} đảm nhận:
+\begin{minted}[
+    fontsize=\small,
+    breaklines=true,
+    linenos=true,
+    frame=single,
+    tabsize=4
+]{cpp}
+// 1. Nhận ảnh đầu vào và rút trích đặc trưng
+cv::Mat queryFeature = extractor->extract(queryImage);
+
+// 2. Chuyển đổi feature thành dữ liệu tương thích với FLANN (CV_32F)
+queryFeature.convertTo(queryFeature, CV_32F);
+
+// 3. Nếu hệ thống đã kích hoạt FLANN KD-Tree
+flannIndex->knnSearch(queryFeature, indices, dists, K + 1);
+
+// 4. Nếu hệ thống duyệt tuần tự (Brute-force) do dữ liệu bé hoặc đặc thù
+for (auto& dbItem : database) {
+    float d = calculateDistance(queryFeature, dbItem.feature);
+    results.push_back({dbItem.imagePath, d});
+}
+// Sắp xếp tăng dần (theo khoảng cách)
+std::sort(results.begin(), results.end());
+
+// 5. Loại bỏ ảnh chính nó (nếu khoảng cách cực bé)
+// Trả về Top K.
+\end{minted}
+
+\section{Cải tiến tốc độ và Hiệu năng}
+Chương trình triển khai các giải pháp cải thiện tốc độ trực tiếp:
+\begin{itemize}
+    \item \textbf{Lưu trữ dữ liệu Offline:} Quá trình trích xuất đặc trưng cực kỳ tốn chi phí. Thay vì trích xuất toàn bộ thư mục mỗi lần chạy lại phần mềm, tiến trình \texttt{DatabaseBuilder} sẽ rút trích trước 100\% tập dữ liệu và kết xuất ra các file \texttt{.yml}.
+    \item \textbf{Từ điển BoVW:} Với SIFT và ORB, bộ từ vựng Bag of Visual Words được tính toán sẵn và nạp lại cực nhanh.
+    \item \textbf{Chỉ mục FLANN (Fast Library for Approximate Nearest Neighbors):} Để tăng tốc thuật toán K-Nearest Neighbors, cấu trúc cây phân nhánh KD-Tree được xây dựng. Thuật toán tìm kiếm xấp xỉ này cho tốc độ tra cứu gần như tức thời (nhanh hơn nhiều so với việc quét tuyến tính O(N) thông thường).
+\end{itemize}
+
+\section{Xử lý ngoại lệ}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Trường hợp} & \textbf{Cách xử lý} \\
+\hline
+Không chọn ảnh & Chương trình thông báo yêu cầu chọn ảnh lên màn hình giao diện. \\
+\hline
+Ảnh bị lỗi & \texttt{imread} báo rỗng, thuật toán in ra cảnh báo trên Terminal và tự động bỏ qua. \\
+\hline
+Thiếu file \texttt{.yml} & \texttt{GUIApp} khởi động tính năng cảnh báo và dừng lại yêu cầu chạy \texttt{build\_features.exe} trước. \\
+\hline
+Tập CSDL bé hơn $K$ & Hàm trả về \texttt{min(K, database.size())}. \\
+\hline
+\end{tabularx}
+\caption{Xử lý các ngoại lệ hệ thống.}
+\end{table}

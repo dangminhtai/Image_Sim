@@ -1,0 +1,37 @@
+\chapter{Giới thiệu}
+
+\section{Bối cảnh}
+Truy vấn ảnh dựa vào nội dung thị giác, hay Content-Based Image Retrieval (CBIR), là bài toán tìm kiếm các ảnh trong cơ sở dữ liệu có nội dung tương tự với một ảnh truy vấn. Thay vì dựa trên tên tệp hoặc mô tả văn bản, hệ thống sử dụng các đặc trưng được trích xuất trực tiếp từ ảnh như màu sắc, hình dạng, biên cạnh, kết cấu và đặc trưng cục bộ.
+
+\section{Mục tiêu đề tài}
+\begin{itemize}
+    \item Xây dựng chương trình truy vấn ảnh có giao diện.
+    \item Trích xuất và so sánh nhiều loại đặc trưng ảnh.
+    \item Hiển thị các ảnh kết quả theo thứ tự tương đồng giảm dần.
+    \item Đánh giá độ chính xác bằng các độ đo Precision và Mean Average Precision (MAP).
+    \item Đánh giá thời gian thực thi các thuật toán.
+    \item Áp dụng thiết kế lập trình hướng đối tượng (OOP) và sử dụng thư viện OpenCV.
+\end{itemize}
+
+\section{Phạm vi thực hiện}
+\begin{itemize}
+    \item Ngôn ngữ lập trình: C/C++.
+    \item Thư viện chính: OpenCV.
+    \item Cơ sở dữ liệu ảnh: CD Covers Dataset và TMBuD Dataset.
+    \item Các phương pháp cơ bản:
+    \begin{itemize}
+        \item Color Histogram.
+        \item Color Correlogram.
+        \item SIFT (Scale-Invariant Feature Transform).
+        \item ORB (Oriented FAST and Rotated BRIEF).
+    \end{itemize}
+    \item Các phương pháp mở rộng:
+    \begin{itemize}
+        \item HOG (Histogram of Oriented Gradients).
+        \item LBP (Local Binary Patterns).
+        \item Kết hợp đặc trưng Color Histogram và HOG (Early Fusion).
+    \end{itemize}
+\end{itemize}
+
+\section{Kết quả đạt được}
+Hệ thống đã xây dựng thành công ứng dụng truy vấn ảnh với giao diện thân thiện, hỗ trợ đầy đủ các phương pháp trích xuất đặc trưng được yêu cầu. Các tính năng trích xuất và truy vấn chạy hoàn toàn độc lập với mô hình Hướng đối tượng (OOP). Hệ thống đã tự động đo lường độ chính xác MAP trên tập dữ liệu với kết quả cao nhất thuộc về phương pháp SIFT và Color Histogram. Tốc độ truy vấn được tối ưu thông qua việc sử dụng cấu trúc cây KD-Tree để tìm kiếm điểm ảnh và nạp đặc trưng song song.

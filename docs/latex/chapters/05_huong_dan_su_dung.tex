@@ -1,0 +1,40 @@
+\chapter{Hướng dẫn sử dụng}
+
+\section{Khởi động chương trình}
+\begin{enumerate}
+    \item Đảm bảo đã biên dịch dự án bằng hệ thống \texttt{CMake}. Thư mục \texttt{Release} sẽ chứa các file thực thi (xem Phụ lục A).
+    \item Chạy \texttt{build\_features.exe} để chương trình duyệt và nén toàn bộ kho ảnh thực tế vào các file cơ sở dữ liệu \texttt{.yml}.
+    \item Chạy \texttt{cbir\_gui.exe} để khởi động màn hình làm việc chính của hệ thống. 
+\end{enumerate}
+
+\section{Thực hiện truy vấn}
+\begin{enumerate}
+    \item Tại cửa sổ dòng lệnh, chọn ảnh bằng cách nhập đường dẫn hoặc ứng dụng sẽ lấy ngẫu nhiên 1 file trong thư mục Test.
+    \item Trên giao diện đồ họa, bấm vào các nút thuật toán ở thanh công cụ bên dưới (Ví dụ: ColorHist, SIFT, HOG...).
+    \item Bấm vào nút \textbf{K=3}, \textbf{K=5}, \textbf{K=11}, \textbf{K=21} để tùy chọn số lượng hiển thị ảnh mong muốn.
+    \item Nhấn chuột trái để xác nhận truy vấn. Hệ thống sẽ tự động đối sánh và xuất danh sách ảnh.
+    \item Quan sát hình ảnh được trả về trực tiếp trên cửa sổ ứng dụng và xem thêm thời gian tính toán thực tế.
+\end{enumerate}
+
+\missingfigure{main_ui.png}{Giao diện chính của chương trình.}
+
+\section{Ý nghĩa thông tin trên giao diện}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Thành phần} & \textbf{Ý nghĩa} \\
+\hline
+Ảnh lớn bên trái & Ảnh truy vấn gốc (Query Image). \\
+\hline
+Lưới ảnh bên phải & Bảng danh sách các ảnh gần giống nhất do hệ thống nhận diện. \\
+\hline
+Chữ \texttt{Dist} / \texttt{Sim} & Điểm số tương đồng hoặc khoảng cách (càng nhỏ càng khớp nếu là Dist). \\
+\hline
+Chữ \texttt{Time} & Thời gian tiêu tốn cho phiên truy vấn vừa xong (đơn vị: ms). \\
+\hline
+Danh sách nút bấm & Quản lý các Extractor đang được nạp và số lượng ảnh. Nút đổi màu khi kích hoạt. \\
+\hline
+\end{tabularx}
+\caption{Chú giải chi tiết giao diện CBIR.}
+\end{table}

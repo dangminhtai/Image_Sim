@@ -8,6 +8,11 @@
  *  2. Tính khoảng cách giữa query và mỗi ảnh trong CSDL.
  *  3. Sắp xếp kết quả và trả về K ảnh gần nhất.
  *
+ * Hỗ trợ 3 cơ chế index:
+ *  - Forward Index: O(1) lookup feature theo imageID (tất cả method)
+ *  - FLANN KD-Tree: tìm kiếm xấp xỉ O(log N) (HOG, Color_HOG)
+ *  - Inverted Index: TF-IDF scoring qua posting lists (SIFT, ORB BoW)
+ *
  * Hỗ trợ 3 độ đo so sánh:
  *  - Euclidean distance (L2)
  *  - Cosine similarity
@@ -17,6 +22,8 @@
 
 #include "FeatureExtractor.h"
 #include "DatabaseBuilder.h"
+#include "ForwardIndex.h"
+#include "InvertedIndex.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -125,6 +132,19 @@ private:
      */
     void buildFlannIndices();
 
+    /**
+     * @brief Xây dựng Forward Index và Inverted Index sau khi load CSDL.
+     *
+     * Forward Index: O(1) lookup cho tất cả methods.
+     * Inverted Index: chỉ build cho SIFT và ORB (BoW methods).
+     */
+    void buildSearchIndices();
+
     std::unordered_map<std::string, cv::Mat> m_flannFeatures;
     std::unordered_map<std::string, std::shared_ptr<cv::flann::Index>> m_flannIndices;
+
+    ForwardIndex m_forwardIndex;   ///< Forward Index: imageID → features
+
+    /// Inverted Index cho các method BoW (key = method name)
+    std::unordered_map<std::string, InvertedIndex> m_invertedIndices;
 };

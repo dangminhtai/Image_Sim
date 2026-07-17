@@ -1,0 +1,96 @@
+\chapter{Phân tích và Thiết kế hệ thống}
+
+\section{Yêu cầu chức năng}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|c|X|X|}
+\hline
+\textbf{Mã} & \textbf{Chức năng} & \textbf{Mô tả} \\
+\hline
+F01 & Chọn ảnh truy vấn & Cho phép người dùng chọn một ảnh từ thư mục. \\
+\hline
+F02 & Chọn phương pháp & Lựa chọn thuật toán rút trích đặc trưng (Color Histogram, SIFT, HOG,...). \\
+\hline
+F03 & Chọn số lượng kết quả & Chọn truy xuất ra Top-3, Top-5, Top-11, hoặc Top-21 ảnh giống nhất. \\
+\hline
+F04 & Thực hiện truy vấn & Rút trích đặc trưng ảnh, tìm kiếm trên KD-Tree/Brute-force và xếp hạng ảnh. \\
+\hline
+F05 & Hiển thị kết quả & Đưa kết quả ảnh, giá trị đo khoảng cách và thứ hạng lên giao diện. \\
+\hline
+F06 & Hiển thị thời gian & Hiển thị thời gian tìm kiếm thực tế của hệ thống. \\
+\hline
+F07 & Đánh giá MAP & Tự động chạy hàng loạt tập dữ liệu Test và xuất bảng kết quả MAP@K ra file Markdown. \\
+\hline
+\end{tabularx}
+\caption{Bảng yêu cầu chức năng của hệ thống.}
+\end{table}
+
+\section{Yêu cầu phi chức năng}
+\begin{itemize}
+    \item \textbf{Chuẩn hóa mã nguồn:} Tuân thủ quy tắc lập trình hướng đối tượng (OOP), đảm bảo tính hằng đúng đắn (\texttt{const-correctness}), có chú thích Doxygen đầy đủ cho toàn bộ class.
+    \item \textbf{Hiệu suất:} Có hỗ trợ tải sẵn dữ liệu (DatabaseBuilder) để tái sử dụng cấu trúc cho những lần tìm kiếm sau.
+    \item \textbf{Lỗi và Ngoại lệ:} Có bắt lỗi đường dẫn, file ảnh lỗi, kích thước cơ sở dữ liệu và tự động bỏ qua nếu ảnh bị lỗi.
+\end{itemize}
+
+\section{Kiến trúc hệ thống}
+Mô hình hoạt động của dự án chia làm các khối cụ thể như sau:
+\missingfigure{system_architecture.png}{Kiến trúc tổng quát của hệ thống.}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Thành phần} & \textbf{Trách nhiệm} \\
+\hline
+Giao diện (GUIApp) & Sử dụng module cv::ui của OpenCV để nhận thao tác click chuột, chọn phương pháp, K, và hiển thị kết quả. \\
+\hline
+Feature Extractor & Hệ thống đa hình kế thừa từ lớp trừu tượng \texttt{FeatureExtractor} dùng để rút trích và chuẩn hóa các đặc trưng. \\
+\hline
+Distance Metrics & Cung cấp các hàm đo lường (Cosine, Chi-Squared, Euclidean) độc lập nằm trong lớp \texttt{retrieval\_utils}. \\
+\hline
+Search Engine & Quản lý nhiều bộ trích xuất, hỗ trợ xây dựng và sử dụng Index (FLANN KD-Tree) để phục vụ tìm kiếm Top-K siêu tốc. \\
+\hline
+Feature Database & Module độc lập (\texttt{DatabaseBuilder}) giúp rút trích trước toàn bộ thư mục và lưu lại ra tệp `.yml`. \\
+\hline
+Evaluation Module & \texttt{evaluate\_map.cpp} chuyên trách việc duyệt ảnh Test, tìm kiếm ảnh khớp, và tự tính AP/MAP. \\
+\hline
+\end{tabularx}
+\caption{Mô tả các thành phần trong kiến trúc.}
+\end{table}
+
+\section{Thiết kế hướng đối tượng}
+
+\missingfigure{class_diagram.png}{Sơ đồ lớp của chương trình.}
+
+Hệ thống được thiết kế hoàn toàn hướng đối tượng bằng C++. Class Abstract là \texttt{FeatureExtractor}.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\ttfamily}l|X|>{\ttfamily}l|}
+\hline
+\textbf{Lớp (Class)} & \textbf{Trách nhiệm} & \textbf{Các hàm chính} \\
+\hline
+FeatureExtractor & Lớp giao diện (Interface) cơ sở cho các thuật toán. & extract(cv::Mat), getType() \\
+\hline
+ColorHistogramExtractor & Trích xuất và chuẩn hóa Histogram theo không gian màu. & extract(cv::Mat) \\
+\hline
+ColorCorrelogramExtractor & Trích xuất phân bố tương quan Color Correlogram. & extract(cv::Mat) \\
+\hline
+SIFTExtractor & Rút trích SIFT + BoVW. & extract(cv::Mat) \\
+\hline
+ORBExtractor & Rút trích ORB + BoVW. & extract(cv::Mat) \\
+\hline
+HOGExtractor & Rút trích biểu đồ hướng Gradient. & extract(cv::Mat) \\
+\hline
+LBPExtractor & Rút trích Local Binary Patterns. & extract(cv::Mat) \\
+\hline
+FusionExtractor & Ghép và chuẩn hóa từ nhiều lớp Extractor khác nhau. & extract(cv::Mat) \\
+\hline
+ImageSearchEngine & Lưu trữ CSDL đặc trưng, xây dựng index FLANN và tìm kiếm ảnh gần nhất. & search(), buildKDTree() \\
+\hline
+GUIApp & Khởi tạo vòng lặp giao diện, tiếp nhận sự kiện. & run(), handleMouse() \\
+\hline
+\end{tabularx}
+\caption{Danh sách lớp chính trong dự án.}
+\end{table}

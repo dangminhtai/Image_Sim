@@ -1,0 +1,31 @@
+\chapter{Tham số cấu hình}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Tham số} & \textbf{Giá trị} & \textbf{Ý nghĩa} \\
+\hline
+\texttt{TOP\_K} & 3, 5, 11, 21 & Số lượng ảnh trả về hiển thị \\
+\hline
+\texttt{HIST\_BINS} & 32 & Số bin mỗi kênh (H, S, V) \\
+\hline
+\texttt{CORRELOGRAM\_DIST} & 1, 3, 5, 7 & 4 khoảng cách lấy mẫu lân cận \\
+\hline
+\texttt{SIFT\_FEATURES} & 500 & Giới hạn tối đa số keypoints SIFT/ORB \\
+\hline
+\texttt{BOVW\_VOCAB\_SIZE} & 500 & Kích thước từ điển BoVW KMeans \\
+\hline
+\texttt{HOG\_WIN\_SIZE} & $64 \times 64$ & Resize ảnh cho HOG Extractor \\
+\hline
+\texttt{HOG\_BLOCK\_SIZE} & $16 \times 16$ & Kích thước khối chuẩn hóa cục bộ \\
+\hline
+\texttt{HOG\_CELL\_SIZE} & $8 \times 8$ & Kích thước một ô tạo histogram \\
+\hline
+\texttt{LBP\_RADIUS} & 1 & Bán kính lấy mẫu LBP \\
+\hline
+\texttt{LBP\_POINTS} & 8 & Số điểm lân cận để lấy bit \\
+\hline
+\end{tabularx}
+\caption{Các siêu tham số được đặt sẵn trong code C++.}
+\end{table}
