@@ -34,6 +34,18 @@ Write-Host "Copying Data..."
 if (Test-Path "data\CD") {
     Copy-Item -Path "data\CD" -Destination "$target\data\CD" -Recurse -Force
 }
+if (Test-Path "data\features_CD.yml") {
+    Copy-Item -Path "data\features_CD.yml" -Destination "$target\data" -Force
+}
+if (Test-Path "data\features_TMBuD.yml") {
+    Copy-Item -Path "data\features_TMBuD.yml" -Destination "$target\data" -Force
+}
+if (Test-Path "data\vocab_CD") {
+    Copy-Item -Path "data\vocab_CD" -Destination "$target\data\vocab_CD" -Recurse -Force
+}
+if (Test-Path "data\vocab_TMBuD") {
+    Copy-Item -Path "data\vocab_TMBuD" -Destination "$target\data\vocab_TMBuD" -Recurse -Force
+}
 
 # Copy Release (exe + dll)
 Write-Host "Copying Binaries..."
