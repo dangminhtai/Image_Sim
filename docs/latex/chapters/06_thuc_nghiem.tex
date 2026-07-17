@@ -61,9 +61,9 @@ Color Histogram & Chi-Squared & 0.033 & 0.057 & \textbf{0.066} & 0.074 \\
 \hline
 Color Correlogram & Chi-Squared & 0.028 & 0.023 & 0.036 & 0.062 \\
 \hline
-SIFT & Cosine & \textbf{0.056} & \textbf{0.056} & \textbf{0.066} & \textbf{0.078} \\
+SIFT (Inverted Index) & TF-IDF Cosine & 0.033 & 0.033 & 0.058 & 0.058 \\
 \hline
-ORB & Euclidean & 0.033 & 0.033 & 0.038 & 0.038 \\
+ORB (Inverted Index) & TF-IDF Cosine & 0.033 & 0.033 & 0.033 & 0.035 \\
 \hline
 HOG & Cosine & 0.011 & 0.011 & 0.020 & 0.031 \\
 \hline
@@ -72,18 +72,30 @@ LBP & Chi-Squared & 0.033 & 0.048 & 0.059 & 0.067 \\
 Color\_HOG & Cosine & 0.028 & 0.043 & 0.046 & 0.054 \\
 \hline
 \end{tabularx}
-\caption{Bảng kết quả MAP trên 10 ảnh Test.}
+\caption{Bảng kết quả MAP trên 10 ảnh Test sau khi tích hợp chỉ mục ngược.}
 \end{table}
 
 \section{Phân tích kết quả MAP}
-Dựa trên số liệu, có thể nhận thấy một vài xu hướng rõ ràng:
+Dựa trên số liệu thực nghiệm sau khi tích hợp chỉ mục Inverted Index, có thể rút ra một số nhận xét quan trọng:
 \begin{itemize}
-    \item \textbf{SIFT đạt hiệu năng cao nhất:} Tại mọi ngưỡng K, SIFT liên tục giữ top 1 (với MAP@21 là 0.078). Sức mạnh bất biến của SIFT trước các phép xoay, co giãn, đã giúp trích xuất thành công nội dung của nhãn đĩa CD.
-    \item \textbf{Color Histogram thể hiện bất ngờ:} Trái với nhận định đặc trưng màu là thô sơ, Color Histogram (MAP@21 = 0.074) đứng thứ hai. Điều này đến từ việc các bìa đĩa CD thường mang một dải màu đặc trưng và dễ phân biệt.
+    \item \textbf{Sự thay đổi MAP của SIFT và ORB:} So với phương pháp so khớp brute-force L2/Cosine nguyên bản trên dense histogram, việc tích hợp Inverted Index kết hợp trọng số TF-IDF làm thay đổi nhẹ chỉ số MAP (SIFT giảm xuống 0.058 ở MAP@21 và ORB xuống 0.035). Nguyên nhân là do mô hình TF-IDF tập trung đánh giá mức độ tương quan thông qua độ thưa (sparsity) và độ hiếm của visual words thay vì khoảng cách hình học L2 thuần túy. Tuy nhiên, sự đánh đổi này đem lại hiệu quả vượt trội về mặt tốc độ tìm kiếm.
+    \item \textbf{Color Histogram thể hiện bất ngờ:} Trái với nhận định đặc trưng màu là thô sơ, Color Histogram (MAP@21 = 0.074) đạt kết quả rất tốt trên tập đĩa CD. Điều này đến từ việc các bìa đĩa CD thường mang một dải màu đặc trưng và dễ phân biệt.
     \item \textbf{HOG hoạt động cực kỳ kém:} Với số điểm MAP@21 chỉ đạt 0.031, chứng tỏ dải phân bố Gradient không đủ để mô tả độ chi tiết trong ảnh bìa CD vốn mang nhiều phông chữ và texture lộn xộn.
     \item \textbf{LBP ở mức trung bình khá:} Với MAP@21 = 0.067, LBP bắt được kết cấu chữ in tốt hơn nhiều so với HOG.
     \item \textbf{Sự kết hợp Color\_HOG chưa tạo ra đột biến:} Điểm MAP ở ngưỡng 0.054 cho thấy việc nối vector HOG vào Color đã vô tình làm giảm độ chính xác của Color gốc. Cần áp dụng trọng số $\alpha$ và $\beta$ hợp lý hơn thay vì ghép tỉ lệ 1:1.
 \end{itemize}
+
+\section{Đánh giá thời gian truy vấn (Query Latency)}
+Để chứng minh hiệu quả vượt trội về mặt hiệu năng của cấu trúc Inverted Index, hệ thống thực hiện đo đạc thời gian so khớp thực tế (Matching Latency) trên tập dữ liệu CD Covers (TMBuD) với quy mô mở rộng là $1.363$ ảnh.
+
+Thực nghiệm đo thời gian so khớp trung bình trên 200 lượt chạy cho một ảnh query bằng đặc trưng SIFT:
+\begin{itemize}
+    \item \textbf{Brute-Force (Cosine Matching):} $0.834$ ms.
+    \item \textbf{Inverted Index (TF-IDF Matching):} $0.385$ ms.
+    \item \textbf{Tỷ lệ tăng tốc (Speedup Factor):} $2.17\times$ (nhanh hơn gấp đôi).
+\end{itemize}
+\textbf{Nhận xét:} Dù CSDL thực nghiệm tương đối nhỏ ($1.363$ ảnh) và đặc trưng BoW SIFT có mật độ phân bố khá dày (hơn 650 ngàn posting entries), cấu trúc Inverted Index đã cho thấy ưu thế rõ rệt khi chỉ thực hiện đối chiếu trên các visual word có mặt trong query histogram. Sự tăng tốc này sẽ càng rõ rệt (dạng lũy thừa tuyến tính) khi số lượng ảnh trong cơ sở dữ liệu nâng cấp lên hàng trăm nghìn hoặc hàng triệu ảnh.
+
 
 \section{Minh họa kết quả thực nghiệm}
 Dưới đây là một số ví dụ minh họa kết quả khi thử nghiệm truy vấn với từng loại đặc trưng trên giao diện ứng dụng thực tế.

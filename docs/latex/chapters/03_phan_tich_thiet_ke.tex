@@ -87,10 +87,15 @@ LBPExtractor & Rút trích Local Binary Patterns. & extract(cv::Mat) \\
 \hline
 FusionExtractor & Ghép và chuẩn hóa từ nhiều lớp Extractor khác nhau. & extract(cv::Mat) \\
 \hline
-ImageSearchEngine & Lưu trữ CSDL đặc trưng, xây dựng index FLANN và tìm kiếm ảnh gần nhất. & search(), buildKDTree() \\
+ForwardIndex & Chỉ mục xuôi lưu trữ và tra cứu O(1) các vector đặc trưng theo ID ảnh. & build(), getFeature(), getMetadata() \\
+\hline
+InvertedIndex & Chỉ mục ngược visual words sang danh sách posting list cho SIFT/ORB, tính TF-IDF. & build(), search(), getVocabSize() \\
+\hline
+ImageSearchEngine & Lưu trữ CSDL đặc trưng, quản lý các lớp Index (FLANN, Inverted, Forward) và tìm kiếm ảnh. & search(), loadDatabase(), buildSearchIndices() \\
 \hline
 GUIApp & Khởi tạo vòng lặp giao diện, tiếp nhận sự kiện. & run(), handleMouse() \\
 \hline
 \end{tabularx}
 \caption{Danh sách lớp chính trong dự án.}
 \end{table}
+

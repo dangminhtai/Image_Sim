@@ -13,7 +13,7 @@ New-Item -ItemType Directory -Force -Path "$target\Docs"
 
 # Copy Docs (only the essential latex source and final PDF)
 Write-Host "Copying Docs..."
-Copy-Item -Path "Docs\report_minted.pdf" -Destination "$target\23127523_BaoCao.pdf" -Force
+Copy-Item -Path "Docs\latex\main.pdf" -Destination "$target\23127523_BaoCao.pdf" -Force
 Copy-Item -Path "Docs\latex" -Destination "$target\Docs\latex" -Recurse -Force
 # Remove intermediate minted files to save space
 if (Test-Path "$target\Docs\latex\_minted-main") {

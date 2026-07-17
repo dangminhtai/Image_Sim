@@ -163,8 +163,8 @@ std::vector<std::pair<int, float>> InvertedIndex::search(
     }
 
     // Accumulate TF-IDF scores
-    // Dùng unordered_map để chỉ lưu các ảnh ứng viên (candidate set)
-    std::unordered_map<int, float> scores;
+    // Dùng vector để có chỉ số truy cập O(1) trực tiếp thay vì hash map
+    std::vector<float> scores(m_totalDocs, 0.0f);
     const float* queryData = query.ptr<float>();
 
     for (int w = 0; w < m_vocabSize; ++w) {
@@ -181,9 +181,11 @@ std::vector<std::pair<int, float>> InvertedIndex::search(
     }
 
     // Chuyển sang vector và sort giảm dần theo score
-    results.reserve(scores.size());
-    for (const auto& [imgID, score] : scores) {
-        results.emplace_back(imgID, score);
+    results.reserve(m_totalDocs);
+    for (int imgID = 0; imgID < m_totalDocs; ++imgID) {
+        if (scores[imgID] > 0.0f) {
+            results.emplace_back(imgID, scores[imgID]);
+        }
     }
 
     std::sort(results.begin(), results.end(),
