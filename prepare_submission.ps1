@@ -46,6 +46,9 @@ if (Test-Path "data\vocab_CD") {
 if (Test-Path "data\vocab_TMBuD") {
     Copy-Item -Path "data\vocab_TMBuD" -Destination "$target\data\vocab_TMBuD" -Recurse -Force
 }
+if (Test-Path "data\TMBuD\images") {
+    Copy-Item -Path "data\TMBuD\images" -Destination "$target\data\TMBuD\images" -Recurse -Force
+}
 
 # Copy Release (exe + dll)
 Write-Host "Copying Binaries..."
